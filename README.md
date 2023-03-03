@@ -1,6 +1,15 @@
-# Welcome to your CDK TypeScript project
+# Welcome to Aurora upgrade to 2.11.1 testing 
 
-This is a blank project for CDK development with TypeScript.
+This CDK template will create following Aurora MySQL clusters:
+```typescript
+    rds.AuroraMysqlEngineVersion.VER_2_10_0,
+    rds.AuroraMysqlEngineVersion.VER_2_10_1,
+    rds.AuroraMysqlEngineVersion.VER_2_10_2,
+    rds.AuroraMysqlEngineVersion.VER_2_10_3,
+    rds.AuroraMysqlEngineVersion.VER_2_09_0,
+    rds.AuroraMysqlEngineVersion.VER_2_09_1,
+    rds.AuroraMysqlEngineVersion.VER_2_09_2,
+```
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
