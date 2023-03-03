@@ -3,6 +3,9 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as assets from 'aws-cdk-lib/aws-s3-assets';
 
 export class AuroraUpgrade2111Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -44,18 +47,26 @@ export class AuroraUpgrade2111Stack extends cdk.Stack {
         cloudwatchLogsExports: ['audit', 'error', 'general', 'slowquery'],
       }));
     }
+
+    const scriptAsset = new assets.Asset(this, 'MyScriptAsset', {
+      path: path.join(__dirname, '../multi_conn_mysql_v1.0.py'),
+    });
+
     const userData = ec2.UserData.forLinux();
     userData.addCommands('yum update -y', 
     'yum install mysql -y',
     'amazon-linux-extras install epel -y',
     'yum install sysbench -y',
     'yum install python3-devel mysql-devel redhat-rpm-config gcc -y',
-    'pip3 install mysqlclient pytz DBUtils==1.3 config_file');
+    'pip3 install mysqlclient pytz DBUtils==1.3 config_file',
+    `sudo aws s3 cp s3://${scriptAsset.s3BucketName}/${scriptAsset.s3ObjectKey} /tmp/multi_conn_mysql_v1.0.py`,
+    'sudo chmod +x /tmp/multi_conn_mysql_v1.0.py');
 
     const role = new iam.Role(this, 'MyEC2Role', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
     });
     role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+    scriptAsset.grantRead(role);
 
     new ec2.Instance(this, 'MySQL Cliet Instance', {
       vpc: vpc,
